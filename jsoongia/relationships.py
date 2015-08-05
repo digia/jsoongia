@@ -38,6 +38,9 @@ class HasMany(SerializerRelationship):
         parsed = []
         reference_value = data[schema.ref]
 
+        if not isinstance(included, list):
+            included = [included]
+
         for potential_relationship in included:
             if reference_value == potential_relationship[self.reference]:
                 ref_label = schema.ref

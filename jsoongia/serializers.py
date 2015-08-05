@@ -1,3 +1,5 @@
+import inspect
+import importlib
 
 
 class Serializer(object):
@@ -63,12 +65,9 @@ class Serializer(object):
             if relation not in included: continue
 
             relation_data = included[relation]
-            relationships[relation] = attributes['relationship'].parse(
-                attributes['serializer'], 
-                data,
-                relation_data
-
-            )
+            parser = attributes['relationship']
+            serializer = self._get_serializer(attributes['serializer'])
+            relationships[relation] = parser.parse(serializer, data, relation_data)
 
         return relationships
 
@@ -77,7 +76,7 @@ class Serializer(object):
 
         for include, attributes in included.items():
             if include in relationships:
-                serializer = relationships[include]['serializer']()
+                serializer = self._get_serializer(relationships[include]['serializer'])()
                 serialized = serializer.serialize(attributes)['data']
 
                 if isinstance(serialized, list):
@@ -86,6 +85,15 @@ class Serializer(object):
                     data.append(serialized)
 
         return self._remove_included_duplicates(data)
+
+    def _get_serializer(self, serializer):
+        if isinstance(serializer, str):
+            segments = serializer.split('.')
+            cls = segments.pop()
+            module = importlib.import_module('.'.join(segments))
+            serializer = getattr(module, cls)
+        
+        return serializer
 
     def _remove_included_duplicates(self, included):
         unique = []
