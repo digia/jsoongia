@@ -5,11 +5,11 @@ from .. import Serializer, relationships
 class PollSerializer(Serializer):
     type = 'poll'
     attributes = [
-        'question', 'created_at', 'updated_at', 
+        'question', 'multiple_choice', 'multiple_votes', 'created_at', 'updated_at', 
     ]
     relationships = {
         'answer': {
-            'serializer': 'AnswerSerializer',
+            'serializer': 'jsoongia.test.serialization.AnswerSerializer',
             'relationship': relationships.HasMany('poll_id')
         }
     }

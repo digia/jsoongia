@@ -18,9 +18,22 @@ class BelongsToRelationshipTestCase(TestCase):
         self.assertEquals(1, parsed['id'])
         self.assertEquals(PollSerializer.type, parsed['type'])
 
+    def it_should_build_reference_with_only_one_include(self):
+        belongs_to = relationships.BelongsTo()
+
+        included = poll(1)
+        data = answer(20, 1)
+
+        parsed = belongs_to.parse(PollSerializer, data, included)
+
+        self.assertTrue(parsed['type'])
+        self.assertTrue(parsed['id'])
+        self.assertEquals(1, parsed['id'])
+        self.assertEquals(PollSerializer.type, parsed['type'])
+
 
 class HasManyRelationshipTestCase(TestCase):
-    def it_should_work(self):
+    def it_should_handle_a_has_many_relationship(self):
         has_many = relationships.HasMany('poll_id')
 
         # anser(id, poll_id)
@@ -30,6 +43,18 @@ class HasManyRelationshipTestCase(TestCase):
         parsed = has_many.parse(AnswerSerializer, data, included)
 
         self.assertEquals(2, len(parsed['data']))
+
+    def it_should_handle_a_has_many_with_only_one_include(self):
+        has_many = relationships.HasMany('poll_id')
+
+        # anser(id, poll_id)
+        included = answer(1, 1)
+        data = poll(1)
+
+        parsed = has_many.parse(AnswerSerializer, data, included)
+
+        self.assertTrue(parsed['data']['id'])
+        self.assertTrue(parsed['data']['type'])
         
 
 class SerializerTestCase(TestCase):
@@ -81,9 +106,8 @@ class SerializerTestCase(TestCase):
 
         data = answer(1, 22)
         included = {'poll': poll(22)}
-        meta = {'total': 100}
 
-        serialized = s.serialize(data, included, meta)
+        serialized = s.serialize(data, included)
 
         self.assertTrue(serialized['data'])
         self.assertEquals(AnswerSerializer.type, serialized['data']['type'])
@@ -97,7 +121,23 @@ class SerializerTestCase(TestCase):
         self.assertTrue(serialized['included'])
         self.assertEquals(1, len(serialized['included']))
 
-        self.assertTrue(serialized['meta'])
+    def it_should_handle_relationships_as_a_string(self):
+        s = PollSerializer() # BelongsToRelationship
+
+        data = poll(1)
+        included = {'answer': answer(22, 1)}
+
+        serialized = s.serialize(data, included)
+
+        print(serialized)
+        self.assertEquals(PollSerializer.type, serialized['data']['type'])
+        self.assertEquals(data['question'], serialized['data']['attributes']['question'])
+        self.assertEquals(data['multiple_choice'], serialized['data']['attributes']['multiple_choice'])
+        self.assertEquals(data['multiple_votes'], serialized['data']['attributes']['multiple_votes'])
+
+        self.assertTrue(serialized['data']['relationships']['answer'])
+        self.assertTrue(serialized['included'])
+        self.assertEquals(1, len(serialized['included']))
 
     def it_should_allow_different_refs(self):
         s = UuidRefSerializer() 
