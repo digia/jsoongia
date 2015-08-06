@@ -129,7 +129,6 @@ class SerializerTestCase(TestCase):
 
         serialized = s.serialize(data, included)
 
-        print(serialized)
         self.assertEquals(PollSerializer.type, serialized['data']['type'])
         self.assertEquals(data['question'], serialized['data']['attributes']['question'])
         self.assertEquals(data['multiple_choice'], serialized['data']['attributes']['multiple_choice'])
